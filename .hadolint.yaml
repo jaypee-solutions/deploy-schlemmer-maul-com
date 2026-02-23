@@ -1,0 +1,4 @@
+# Configuration for docker linter hadolint.
+
+ignored:
+  - DL3008 # we will not pin apt-get installed packages but use the latest from an LTS base image

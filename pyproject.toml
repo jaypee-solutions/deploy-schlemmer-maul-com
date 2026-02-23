@@ -1,0 +1,106 @@
+[project]
+
+authors = [{ email = "support@jaypee.solutions", name = "Jan-Peter Alten" }]
+description = "Deploy Schlemmer Maul is a Python package."
+name = "deploy_schlemmer_maul_com"
+readme = "README.md"
+requires-python = ">=3.12"
+version = "0.0.0"
+
+dependencies = [
+    "pulumi-cloudflare>=5.47.0",
+    "pulumi>=3.145.0",
+    "pydantic>=2.10.5",
+    "typer>=0.21.1",
+]
+
+[dependency-groups]
+dev = [
+    "pyright >=1.1.386,<2",
+    "pytest >=8.3.3,<9",
+    "pytest-cov >=5.0.0,<6",
+    "ruff >=0.7.1,<0.8",
+]
+
+[project.scripts]
+dkade = 'deploy_schlemmer_maul_com.cli:main'
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = [
+    "A", # flake8-builtins
+    # "C4",  # flake8-comprehensions (needs mainly test fixes)
+    "ERA",    # eradicate (commented out code)
+    "G",      # flake8-logging-format
+    "I",      # isort
+    "ISC",    # flake8-implicit-string-concat
+    "PL",     # Pylint
+    "RET",    # flake8-return
+    "RUF100", # unused noqa
+    "SLF",    # flake8-self
+]
+ignore = [
+    "ISC001",  # single line string concat  # disabled per hint from ruff reg. conflict with formatter
+    "PLR0912", # too many branches
+    "PLR0913", # too many arguments
+    "PLR0915", # too many statements
+    "PLR2004", # magic value used in comparison  # we do this if value is just used once
+    "PLR1711", # useless return  # we return None explicitly
+]
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
+
+[tool.ruff.lint.pyflakes]
+# list of generics, so ruff recognizes that the arguments are always types:
+extend-generics = ["zephyr.model.element.ContextMixin"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "SLF001", # allow access to private members in tests
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.pyright]
+useLibraryCodeForTypes = true
+include = ["src", "scripts"]
+exclude = ["**/node_modules", "**/__pycache__"]
+reportUnnecessaryTypeIgnoreComment = true
+
+[tool.coverage.run]
+branch = true
+
+data_file = "coverage.coverage"
+source = ["src"]
+
+[tool.coverage.report]
+fail_under = 20
+show_missing = true
+skip_covered = true
+
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    # have to re-enable the standard pragma:
+    "pragma: no cover",
+
+    # tests don't hit defensive assertion code:
+    "raise NotImplementedError",
+
+    # non-runnable code isn't run during tests:
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if .*TYPE_CHECKING:",
+
+    # do not measure coverage in platform dependent switches:
+    "sys.platform == '",
+    "sys.platform in",
+]

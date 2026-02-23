@@ -1,0 +1,10 @@
+# Changes here will be overwritten by Copier
+_commit: v0.0.1
+_src_path: gh:jaypee-solutions/python-template
+cli_name: dkade
+email: support@jaypee.solutions
+full_name: Jan-Peter Alten
+github_username: jaypee-solutions
+module_name: deploy_schlemmer_maul_com
+project_name: Deploy Schlemmer Maul
+project_short_description: Deploy Schlemmer Maul is a Python package.

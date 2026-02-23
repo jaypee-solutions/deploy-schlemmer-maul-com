@@ -1,0 +1,5 @@
+future-release=0.0.1
+user=jaypee-solutions
+project=Deploy Objektberatung
+exclude-labels=duplicate,question,invalid,wontfix,ignore
+add-sections={"refactor":{"prefix":"**Refactorings:**","labels":["refactor"]},"doc":{"prefix":"**Documentation:**","labels":["doc"]},"build":{"prefix":"**Build system:**","labels":["build"]}}

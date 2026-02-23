@@ -1,0 +1,4 @@
+config:
+  deploy-schlemmer-maul-com:config:
+    cloudflare:
+      zone: schlemmer-maul.com

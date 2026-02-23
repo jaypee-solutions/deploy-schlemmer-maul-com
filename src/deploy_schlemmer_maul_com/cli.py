@@ -1,0 +1,21 @@
+"""Command Line Interface."""
+
+import typer
+
+app = typer.Typer()
+
+
+@app.command()
+def run() -> None:
+    """Run command."""
+
+
+# Reference: https://typer.tiangolo.com/tutorial/commands/one-or-multiple/#one-command-and-one-callback
+@app.callback(no_args_is_help=True)
+def main() -> None:
+    """CLI for Deploy Schlemmer Maul."""
+    typer.echo('Hello, Deploy Schlemmer Maul!')
+
+
+# Reference: https://github.com/tiangolo/typer/issues/200#issuecomment-796485787
+typer_click_object = typer.main.get_command(app)
