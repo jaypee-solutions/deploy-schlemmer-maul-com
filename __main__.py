@@ -44,8 +44,8 @@ cloudflare.Record(
     proxied=False,
     name='@',
     type='MX',
-    content='mail.alten.de',
-    priority=10,
+    content='schlemmermaul-com02c.mail.protection.outlook.com',
+    priority=0,
     zone_id=zone.id,
     ttl=60,
     opts=p.ResourceOptions(provider=cloudflare_provider),
@@ -56,48 +56,41 @@ cloudflare.Record(
     proxied=False,
     name='autodiscover',
     type='CNAME',
-    content='mail.alten.de',
+    content='autodiscover.outlook.com',
     zone_id=zone.id,
     ttl=60,
     opts=p.ResourceOptions(provider=cloudflare_provider),
 )
 
 cloudflare.Record(
-    '_autodiscover._tcp',
+    'selector1._domainkey',
     proxied=False,
-    name='_autodiscover._tcp',
-    type='SRV',
-    data={
-        'service': '_autodiscover',
-        'proto': '_tls',
-        'name': '_autodiscover._tcp',
-        'priority': 100,
-        'weight': 1,
-        'port': 443,
-        'target': 'mail.alten.de',
-    },
-    zone_id=zone.id,
-    ttl=60,
-    opts=p.ResourceOptions(provider=cloudflare_provider),
-)
-
-cloudflare.Record(
-    'autoconfig',
-    proxied=False,
-    name='autoconfig',
+    name='selector1._domainkey',
     type='CNAME',
-    content='mail.alten.de',
+    content='selector1-schlemmermaul-com02c._domainkey.schlemmermaul.d-v1.dkim.mail.microsoft',
     zone_id=zone.id,
     ttl=60,
     opts=p.ResourceOptions(provider=cloudflare_provider),
 )
+
+cloudflare.Record(
+    'selector2._domainkey',
+    proxied=False,
+    name='selector2._domainkey',
+    type='CNAME',
+    content='selector2-schlemmermaul-com02c._domainkey.schlemmermaul.d-v1.dkim.mail.microsoft',
+    zone_id=zone.id,
+    ttl=60,
+    opts=p.ResourceOptions(provider=cloudflare_provider),
+)
+
 
 cloudflare.Record(
     'SPF',
     proxied=False,
     name='@',
     type='TXT',
-    content='"v=spf1 mx -all"',
+    content=f'"v=spf1 include:spf.protection.outlook.com ip4:{IP} -all"',
     zone_id=zone.id,
     ttl=60,
     opts=p.ResourceOptions(provider=cloudflare_provider),
