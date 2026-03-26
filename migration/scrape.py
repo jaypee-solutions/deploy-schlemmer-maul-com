@@ -7,8 +7,8 @@ Each product becomes a <slug>.yaml file inside its category folder.
 Images are downloaded to data/images/.
 
 Usage:
-    pip install -r requirements.txt
-    python scrape.py [--out data]
+    uv sync
+    uv run migration/scrape.py [--out data]
 """
 
 import argparse
