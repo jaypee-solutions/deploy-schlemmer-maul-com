@@ -1,0 +1,13 @@
+[project]
+name = "schlemmer-maul-migration"
+version = "0.1.0"
+description = "Scrape schlemmer-maul.de and import products into WooCommerce"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.32",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "pyyaml>=6.0",
+    "woocommerce>=3.0",
+]
+
