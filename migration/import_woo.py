@@ -16,9 +16,9 @@ Configuration (environment variables or .env file next to this script):
     DATA_DIR     Path to the data folder (default: data)
 
 Usage:
-    pip install -r requirements.txt
+    uv sync
     # copy .env.example to .env and fill in credentials
-    python import_woo.py [--data data] [--dry-run]
+    uv run python import_woo.py [--data data] [--dry-run]
 """
 
 import argparse
@@ -75,35 +75,39 @@ class MediaUploader:
         self.base = wp_url.rstrip("/")
         self.auth = (user, app_pass)
         self.dry_run = dry_run
-        self._cache: dict[str, int] = {}  # filename → media id
+        self._cache: dict[str, int] = {}  # str(image_path) → media id
 
     def _existing_id(self, filename: str) -> int | None:
         """Check if a media item with this filename already exists."""
-        resp = requests.get(
-            f"{self.base}/wp-json/wp/v2/media",
-            params={"search": filename, "per_page": 5},
-            auth=self.auth,
-            timeout=15,
-        )
-        if resp.ok:
-            for item in resp.json():
-                if item.get("slug", "") == Path(filename).stem.lower().replace(" ", "-"):
-                    return item["id"]
-                src = item.get("source_url", "")
-                if Path(src).name == filename:
-                    return item["id"]
+        try:
+            resp = requests.get(
+                f"{self.base}/wp-json/wp/v2/media",
+                params={"search": filename, "per_page": 5},
+                auth=self.auth,
+                timeout=15,
+            )
+            if resp.ok:
+                for item in resp.json():
+                    if item.get("slug", "") == Path(filename).stem.lower().replace(" ", "-"):
+                        return item["id"]
+                    src = item.get("source_url", "")
+                    if Path(src).name == filename:
+                        return item["id"]
+        except (requests.RequestException, ValueError) as exc:
+            print(f"    [media] ERROR checking existing media for {filename}: {exc}", file=sys.stderr)
         return None
 
     def upload(self, image_path: Path) -> int | None:
         """Upload *image_path* and return the WordPress media ID."""
-        filename = image_path.name
-        if filename in self._cache:
-            return self._cache[filename]
+        cache_key = str(image_path)
+        if cache_key in self._cache:
+            return self._cache[cache_key]
 
+        filename = image_path.name
         existing = self._existing_id(filename)
         if existing:
             print(f"    [media] reuse existing id={existing} for {filename}")
-            self._cache[filename] = existing
+            self._cache[cache_key] = existing
             return existing
 
         if self.dry_run:
@@ -124,7 +128,7 @@ class MediaUploader:
             resp.raise_for_status()
             media_id = resp.json()["id"]
             print(f"    [media] uploaded {filename} → id={media_id}")
-            self._cache[filename] = media_id
+            self._cache[cache_key] = media_id
             return media_id
         except Exception as exc:  # noqa: BLE001
             print(f"    [media] ERROR uploading {filename}: {exc}", file=sys.stderr)
@@ -156,20 +160,11 @@ def ensure_category(
     parent_id: int,
     uploader: MediaUploader,
     data_dir: Path,
-    folder: Path,
     slug_to_id: dict[str, int],
     dry_run: bool,
 ) -> int | None:
     slug = cat_data.get("slug", "")
     name = cat_data.get("name", slug)
-
-    # Check if already exists
-    resp = wc.get("products/categories", params={"slug": slug, "per_page": 1})
-    if resp.status_code == 200 and resp.json():
-        wc_id = resp.json()[0]["id"]
-        print(f"  [cat] exists: {name} (id={wc_id})")
-        slug_to_id[slug] = wc_id
-        return wc_id
 
     # Upload image if present
     image_payload: dict | None = None
@@ -188,6 +183,22 @@ def ensure_category(
     }
     if image_payload:
         payload["image"] = image_payload
+
+    # Check if already exists → update instead of creating a duplicate
+    resp = wc.get("products/categories", params={"slug": slug, "per_page": 1})
+    if resp.status_code == 200 and resp.json():
+        wc_id = resp.json()[0]["id"]
+        if dry_run:
+            print(f"  [cat] DRY-RUN: would update '{name}' (id={wc_id})")
+            slug_to_id[slug] = wc_id
+            return wc_id
+        resp2 = wc.put(f"products/categories/{wc_id}", payload)
+        if resp2.status_code in (200, 201):
+            print(f"  [cat] updated: {name} (id={wc_id})")
+        else:
+            print(f"  [cat] WARN: could not update '{name}': {resp2.status_code} {resp2.text[:200]}", file=sys.stderr)
+        slug_to_id[slug] = wc_id
+        return wc_id
 
     if dry_run:
         print(f"  [cat] DRY-RUN: would create '{name}' (parent_id={parent_id})")
@@ -242,11 +253,11 @@ def ensure_product(
     cat_folder_slug = product_file.parent.name
     cat_id = slug_to_id.get(cat_folder_slug)
     if cat_id is None:
-        # Try parent category by matching folder name to any slug
-        for s, i in slug_to_id.items():
-            if s == cat_folder_slug:
-                cat_id = i
-                break
+        print(
+            f"  [prod] ERROR: category slug '{cat_folder_slug}' not found for '{name}' — skipping",
+            file=sys.stderr,
+        )
+        return False
 
     # Upload images
     image_ids: list[dict] = []
@@ -349,7 +360,6 @@ def main() -> None:
             parent_id=parent_id,
             uploader=uploader,
             data_dir=data_dir,
-            folder=folder,
             slug_to_id=slug_to_id,
             dry_run=dry_run,
         )

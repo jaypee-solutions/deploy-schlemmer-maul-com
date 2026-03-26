@@ -78,7 +78,7 @@ uv run python import_woo.py
 | `--data DIR` | `data` | Data directory to import from |
 | `--dry-run` | off | Print actions without calling the API |
 
-The import is **idempotent**: running it again updates existing items rather than creating duplicates (matched by slug).
+The import is **idempotent**: running it again updates existing categories and products rather than creating duplicates (matched by slug).
 
 ## YAML formats
 
@@ -88,7 +88,7 @@ The import is **idempotent**: running it again updates existing items rather tha
 name: Leichte Schnäpse
 slug: leichte-schnaepse
 description: ""
-image: ../../images/some-image.jpg   # optional, relative to data/
+image: images/some-image.jpg   # optional, relative to data/
 ```
 
 ### `<product-slug>.yaml`
@@ -102,6 +102,6 @@ attributes:
   Alkoholgehalt: "34% Vol."
   Gebindegröße: "0,5 Lt / 1 Lt"
 images:
-  - ../../images/some-image.jpg      # optional, relative to data/
+  - images/some-image.jpg            # optional, relative to data/
 status: publish                      # publish | draft
 ```

@@ -8,7 +8,7 @@ Images are downloaded to data/images/.
 
 Usage:
     uv sync
-    uv run migration/scrape.py [--out data]
+    uv run python scrape.py [--out data]
 """
 
 import argparse
@@ -86,12 +86,6 @@ def write_yaml(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as fh:
         yaml.dump(data, fh, allow_unicode=True, default_flow_style=False, sort_keys=False)
-
-
-def relative_image_path(product_dir: Path, images_dir: Path, filename: str) -> str:
-    """Return a relative path string from product_dir to images_dir/filename."""
-    abs_image = images_dir / filename
-    return str(abs_image.relative_to(product_dir.parent))
 
 
 # ── parsing helpers ───────────────────────────────────────────────────────────
@@ -209,11 +203,11 @@ def scrape_page(folder_path: str, page_path: str, data_dir: Path) -> None:
     cat_image_key: str | None = None
     downloaded_images: list[str] = []
 
+    cat_slug = slugify(folder_path.split("/")[-1])
     for img_url in image_urls:
-        # Derive a filename from the URL
+        # Prefix filename with the category slug to avoid collisions across pages
         raw_name = img_url.split("/")[-1].split("?")[0]
-        # Keep original filename but prefix with category slug for uniqueness
-        filename = raw_name
+        filename = f"{cat_slug}_{raw_name}"
         dest = images_dir / filename
         download_image(img_url, dest)
         rel = str((images_dir / filename).relative_to(data_dir))
